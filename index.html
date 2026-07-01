@@ -48,6 +48,20 @@
     .row-ov { background: #fffbe6 !important; }
     .row-ov select.type-ov { border-color: var(--warning); color: #d48806; font-weight: 600; }
     .btn-link { background: none; border: none; color: var(--primary); cursor: pointer; padding: 8px 0; font-size: 13px; }
+    /* 计费模式说明（弹窗内可折叠帮助，非需求正文） */
+    .help-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-size: 12px; }
+    .help-trigger { display: inline-flex; align-items: center; gap: 4px; color: var(--primary); cursor: pointer; border: none; background: none; font-size: 12px; padding: 0; }
+    .help-trigger .q { display: inline-flex; width: 16px; height: 16px; border-radius: 50%; border: 1px solid var(--primary); font-size: 11px; align-items: center; justify-content: center; font-weight: 600; }
+    .help-panel { display: none; border: 1px solid #91caff; background: #f0f7ff; border-radius: 2px; padding: 10px 12px; margin-bottom: 10px; font-size: 12px; }
+    .help-panel.open { display: block; }
+    .help-panel .mode { margin-bottom: 10px; }
+    .help-panel .mode:last-child { margin-bottom: 0; }
+    .help-panel .mode-h { font-weight: 600; margin-bottom: 4px; }
+    .help-panel .mode-h .tag { display: inline-block; font-size: 11px; padding: 0 5px; border-radius: 2px; margin-right: 4px; }
+    .tag-a { background: #e6f4ff; color: #0958d9; }
+    .tag-b { background: #f6ffed; color: #389e0d; }
+    .tag-c { background: #fff7e6; color: #d48806; }
+    .help-panel .ex { color: #389e0d; margin-top: 2px; }
   </style>
 </head>
 <body>
@@ -97,6 +111,28 @@
           <label><input type="radio" name="v" /> 立即生效</label>
           <label><input type="radio" name="v" checked /> 指定区间</label>
           <input value="2026-07-01 00:00:00" style="width:155px" /> — <input value="2027-01-31 23:59:59" style="width:155px" />
+        </div>
+
+        <div class="help-bar">
+          <span style="color:var(--text2)">维护前请先确认分区属于哪种计费组合</span>
+          <button type="button" class="help-trigger" onclick="toggleHelp()">
+            <span class="q">?</span> 计费模式说明
+          </button>
+        </div>
+        <div class="help-panel" id="helpPanel">
+          <div class="mode">
+            <div class="mode-h"><span class="tag tag-a">A</span>阶梯总价（多行「总价」）</div>
+            <div>每档一个整票价，计费时单行命中。例：25kg → <strong>5.31</strong></div>
+          </div>
+          <div class="mode">
+            <div class="mode-h"><span class="tag tag-b">B</span>首重价 + 续重单价（2 行）</div>
+            <div>首重固定价 + 超出部分按 kg 累加。例：25kg → 10.18+(25−20)×0.24 = <strong>11.38</strong></div>
+          </div>
+          <div class="mode">
+            <div class="mode-h"><span class="tag tag-c">C</span>总价 + 超重续重（N 行总价 + 1 行超重续重）</div>
+            <div>未超重同 A；超重后 = 最后一档总价 + 续重。例：25kg → <strong>5.31</strong>；31kg → 5.31+(31−30)×0.34 = <strong>5.65</strong></div>
+          </div>
+          <div style="color:var(--text2);margin-top:8px;font-size:11px">同一分区只选一种组合；C 末行须选「超重续重」，勿选「单价」。</div>
         </div>
 
         <div class="table-scroll">
@@ -180,6 +216,9 @@
   </div>
 
   <script>
+    function toggleHelp() {
+      document.getElementById('helpPanel').classList.toggle('open');
+    }
     document.querySelectorAll('.charge-type').forEach(function(sel) {
       sel.addEventListener('change', function() {
         var tr = sel.closest('tr');
