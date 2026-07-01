@@ -61,7 +61,13 @@
     .tag-a { background: #e6f4ff; color: #0958d9; }
     .tag-b { background: #f6ffed; color: #389e0d; }
     .tag-c { background: #fff7e6; color: #d48806; }
-    .help-panel .ex { color: #389e0d; margin-top: 2px; }
+    .help-panel .ex { color: #389e0d; margin-top: 4px; line-height: 1.5; }
+    .help-panel .rule { color: var(--text2); margin: 4px 0; line-height: 1.5; }
+    .help-panel table.mini { width: 100%; border-collapse: collapse; font-size: 11px; margin: 6px 0; background: #fff; }
+    .help-panel table.mini th { background: #e6f4ff; border: 1px solid #bae0ff; padding: 3px 6px; text-align: center; font-weight: 500; }
+    .help-panel table.mini td { border: 1px solid #e8e8e8; padding: 3px 6px; text-align: center; }
+    .help-panel .calc { margin-top: 4px; padding: 4px 8px; background: #fff; border-left: 3px solid #52c41a; line-height: 1.55; }
+    .help-panel .calc strong { color: #389e0d; }
   </style>
 </head>
 <body>
@@ -119,18 +125,43 @@
             <span class="q">?</span> 计费模式说明
           </button>
         </div>
-        <div class="help-panel" id="helpPanel">
+        <div class="help-panel open" id="helpPanel">
           <div class="mode">
             <div class="mode-h"><span class="tag tag-a">A</span>阶梯总价（多行「总价」）</div>
-            <div>每档一个整票价，计费时单行命中。例：25kg → <strong>5.31</strong></div>
+            <div class="rule"><strong>怎么配</strong>：同一分区填多行「总价」，每行一个重量段 + 该段<strong>整票</strong>价格。</div>
+            <div class="rule"><strong>怎么算</strong>：找满足「起始 &lt; W ≤ 截止」的<strong>一行</strong>，运费 = 该行价格（不是 W×单价）。</div>
+            <table class="mini">
+              <tr><th>计费类型</th><th>起始</th><th>截止</th><th>价格</th></tr>
+              <tr><td>总价</td><td>0</td><td>10</td><td>3.89</td></tr>
+              <tr><td>总价</td><td>10</td><td>20</td><td>4.58</td></tr>
+              <tr><td>总价</td><td>20</td><td>30</td><td>5.31</td></tr>
+            </table>
+            <div class="calc">例 W=25kg：25 落在 20～30 档 → 取该行整票价 <strong>5.31</strong>（不是 25×某单价）</div>
           </div>
           <div class="mode">
             <div class="mode-h"><span class="tag tag-b">B</span>首重价 + 续重单价（2 行）</div>
-            <div>首重固定价 + 超出部分按 kg 累加。例：25kg → 10.18+(25−20)×0.24 = <strong>11.38</strong></div>
+            <div class="rule"><strong>怎么配</strong>：第 1 行「首重价」= 首段固定价；第 2 行「续重单价」= 超出部分每 kg 价 + 计费单重/向上取整。</div>
+            <div class="rule"><strong>怎么算</strong>：筛选「起始 &lt; W」的<strong>所有行累加</strong>（首重 + 续重费）。</div>
+            <table class="mini">
+              <tr><th>计费类型</th><th>起始</th><th>截止</th><th>计费单重</th><th>向上取整</th><th>价格</th></tr>
+              <tr><td>首重价</td><td>0</td><td>20</td><td>—</td><td>否</td><td>10.18</td></tr>
+              <tr><td>续重单价</td><td>20</td><td>50</td><td>1</td><td>是</td><td>0.24/kg</td></tr>
+            </table>
+            <div class="calc">例 W=25kg：首重 10.18 + 续重 (25−20)×0.24 = 10.18 + 1.20 = <strong>11.38</strong></div>
           </div>
           <div class="mode">
             <div class="mode-h"><span class="tag tag-c">C</span>总价 + 超重续重（N 行总价 + 1 行超重续重）</div>
-            <div>未超重同 A；超重后 = 最后一档总价 + 续重。例：25kg → <strong>5.31</strong>；31kg → 5.31+(31−30)×0.34 = <strong>5.65</strong></div>
+            <div class="rule"><strong>怎么配</strong>：前几行同 A（多行总价）；<strong>最后一行</strong>选「超重续重」，起始=上一档截止，价格填<strong>超出后的 kg 单价</strong>（不是整票）。</div>
+            <div class="rule"><strong>怎么算</strong>：W ≤ 超重起点 → 同 A 命中总价；W &gt; 起点 → <strong>最后一档总价 + (W−起点)×续重单价</strong>。</div>
+            <table class="mini">
+              <tr><th>计费类型</th><th>起始</th><th>截止</th><th>计费单重</th><th>价格含义</th></tr>
+              <tr><td>总价</td><td>0</td><td>10</td><td>—</td><td>整票 3.89</td></tr>
+              <tr><td>总价</td><td>10</td><td>20</td><td>—</td><td>整票 4.58</td></tr>
+              <tr><td>总价</td><td>20</td><td>30</td><td>—</td><td>整票 5.31</td></tr>
+              <tr><td>超重续重</td><td>30</td><td>99</td><td>1</td><td>超出 0.34/kg</td></tr>
+            </table>
+            <div class="calc">例 W=25kg：未超重，命中 20～30 总价 → <strong>5.31</strong></div>
+            <div class="calc">例 W=31kg：5.31（末档总价）+ (31−30)×0.34 = 5.31 + 0.34 = <strong>5.65</strong>（若末行误选「单价」则 31×0.34=10.54，会算错）</div>
           </div>
           <div style="color:var(--text2);margin-top:8px;font-size:11px">同一分区只选一种组合；C 末行须选「超重续重」，勿选「单价」。</div>
         </div>
