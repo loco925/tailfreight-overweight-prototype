@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>尾程运费设置 - 编辑尾程报价原型</title>
+  <style>
+    :root { --primary: #1890ff; --border: #e8e8e8; --text: rgba(0,0,0,.85); --text2: rgba(0,0,0,.45); --bg: #f0f2f5; --danger: #ff4d4f; --warning: #faad14; --success: #52c41a; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: "Microsoft YaHei", "PingFang SC", sans-serif; background: var(--bg); color: var(--text); font-size: 13px; line-height: 1.5715; }
+    /* —— 列表页（对齐 LogisticsTailFreight/Index）—— */
+    .page-hd { background: #fff; padding: 8px 16px; border-bottom: 1px solid var(--border); color: var(--text2); font-size: 12px; }
+    .filter-wrap { background: #fff; margin: 12px; padding: 12px 16px 8px; border: 1px solid var(--border); border-radius: 2px; }
+    .filter-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; align-items: center; }
+    .filter-row input, .filter-row select { height: 28px; border: 1px solid #d9d9d9; border-radius: 2px; padding: 0 8px; font-size: 12px; }
+    .btn { display: inline-flex; align-items: center; gap: 4px; height: 28px; padding: 0 12px; border-radius: 2px; border: 1px solid #d9d9d9; background: #fff; cursor: pointer; font-size: 12px; }
+    .btn-primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+    .btn-add { background: var(--primary); border-color: var(--primary); color: #fff; }
+    .btn-edit { background: #fa8c16; border-color: #fa8c16; color: #fff; }
+    .btn-del { background: var(--danger); border-color: var(--danger); color: #fff; }
+    .btn-exp { background: #fa8c16; border-color: #fa8c16; color: #fff; }
+    .toolbar { margin: 0 12px 8px; display: flex; gap: 6px; }
+    .list-table-wrap { margin: 0 12px 12px; background: #fff; border: 1px solid var(--border); }
+    table.list { width: 100%; border-collapse: collapse; font-size: 12px; }
+    table.list th, table.list td { border-bottom: 1px solid #f0f0f0; padding: 8px 10px; text-align: left; }
+    table.list th { background: #fafafa; font-weight: 500; }
+    table.list .link { color: var(--primary); cursor: pointer; }
+    .row-sel { background: #fffbe6; }
+    /* —— 弹窗遮罩 —— */
+    .mask { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 100; display: flex; align-items: flex-start; justify-content: center; padding: 24px 16px; overflow: auto; }
+    .dialog { background: #fff; width: 100%; max-width: 1320px; border-radius: 2px; box-shadow: 0 4px 12px rgba(0,0,0,.15); margin-bottom: 24px; }
+    .dialog-h { padding: 12px 20px; border-bottom: 1px solid var(--border); font-size: 14px; font-weight: 600; display: flex; justify-content: space-between; }
+    .dialog-b { padding: 16px 20px; max-height: calc(100vh - 160px); overflow: auto; }
+    .dialog-f { padding: 10px 20px; border-top: 1px solid var(--border); text-align: right; }
+    .dialog-f .btn { height: 32px; padding: 0 16px; margin-left: 8px; }
+    .note-red { color: var(--danger); font-size: 12px; margin-bottom: 12px; }
+    .meta-line { display: flex; flex-wrap: wrap; gap: 16px 24px; margin-bottom: 12px; align-items: center; }
+    .meta-line label { color: var(--text2); margin-right: 6px; }
+    .meta-line input, .meta-line select { height: 28px; border: 1px solid #d9d9d9; border-radius: 2px; padding: 0 8px; }
+    .meta-line .ro { background: #f5f5f5; min-width: 280px; }
+    .table-scroll { overflow-x: auto; border: 1px solid var(--border); }
+    table.freight { width: 100%; border-collapse: collapse; min-width: 1180px; font-size: 12px; }
+    table.freight th, table.freight td { border: 1px solid #f0f0f0; padding: 4px 6px; text-align: center; vertical-align: middle; }
+    table.freight th { background: #fafafa; font-weight: 500; white-space: nowrap; }
+    table.freight td input, table.freight td select { width: 100%; height: 26px; border: 1px solid #d9d9d9; border-radius: 2px; padding: 0 4px; font-size: 12px; }
+    table.freight td input:disabled, table.freight td select:disabled { background: #f5f5f5; color: #bbb; }
+    .row-del { color: var(--danger); cursor: pointer; font-size: 14px; border: 1px solid #ffa39e; border-radius: 50%; width: 18px; height: 18px; line-height: 16px; display: inline-block; background: #fff1f0; }
+    .row-ov { background: #fffbe6 !important; }
+    .row-ov select.type-ov { border-color: var(--warning); color: #d48806; font-weight: 600; }
+    .btn-link { background: none; border: none; color: var(--primary); cursor: pointer; padding: 8px 0; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <!-- 背景：尾程运费设置列表（对齐 oatest99.imcxa.com/LogisticsTailFreight/Index） -->
+  <div class="page-hd">物流系统 &gt; 尾程管理 &gt; 尾程运费设置</div>
+  <div class="filter-wrap">
+    <div class="filter-row">
+      <select style="width:120px"><option>所属货代...</option></select>
+      <select style="width:120px"><option>尾程物流</option></select>
+      <input placeholder="尾程物流编码/名称..." value="B2C" style="width:220px" />
+      <button class="btn btn-primary">搜索</button>
+      <button class="btn">清空</button>
+    </div>
+  </div>
+  <div class="toolbar">
+    <button class="btn btn-add">+ 添加</button>
+    <button class="btn btn-edit">编辑</button>
+    <button class="btn btn-del">删除</button>
+    <button class="btn btn-exp">导入</button>
+    <button class="btn btn-exp">批量导出</button>
+  </div>
+  <div class="list-table-wrap">
+    <table class="list">
+      <thead><tr><th></th><th>所属货代</th><th>尾程物流编码</th><th>尾程物流名称</th><th>承运商</th><th>订单类型</th></tr></thead>
+      <tbody>
+        <tr class="row-sel"><td>☑</td><td>GC(谷仓)</td><td class="link">GC-DE-DHL-BDBG</td><td>GC-DE-DHL-本地包裹</td><td>DHL</td><td>一件代发</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 编辑弹窗：基础运费 -->
+  <div class="mask">
+    <div class="dialog">
+      <div class="dialog-h">
+        <span>编辑尾程报价</span>
+        <span style="cursor:pointer;color:#999">×</span>
+      </div>
+      <div class="dialog-b">
+        <div class="note-red">重量单位均为 KG，默认不包含起始重量，包含截止重量</div>
+        <div class="meta-line">
+          <span><label>尾程物流</label><input class="ro" readonly value="GC-DE-DHL-BDBG（GC-DE-DHL-本地包裹）" /></span>
+          <span><label>体积系数</label><input value="2000" style="width:72px" /></span>
+          <span><label>币种</label><select style="width:72px"><option selected>EUR</option></select></span>
+        </div>
+        <div class="meta-line">
+          <label>有效期</label>
+          <label><input type="radio" name="v" /> 立即生效</label>
+          <label><input type="radio" name="v" checked /> 指定区间</label>
+          <input value="2026-07-01 00:00:00" style="width:155px" /> — <input value="2027-01-31 23:59:59" style="width:155px" />
+        </div>
+
+        <div class="table-scroll">
+            <table class="freight" id="freightTable">
+              <thead>
+                <tr>
+                  <th style="width:32px">变更<br>类型</th>
+                  <th>分区名称</th>
+                  <th>国家</th>
+                  <th>计费类型</th>
+                  <th>起始重量<br>(KG)</th>
+                  <th>截止重量<br>(KG)</th>
+                  <th>计费重量<br>(KG)</th>
+                  <th>向上<br>取整</th>
+                  <th>价格</th>
+                  <th>币种</th>
+                  <th>折扣</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- ZONE D：3 总价 + 1 超重续重 -->
+                <tr><td><span class="row-del">⊖</span></td><td><select><option selected>ZONE D</option></select></td><td><input disabled /></td>
+                  <td><select class="charge-type"><option selected>总价</option><option>单价</option><option>首重价</option><option>续重单价</option><option>超重续重</option></select></td>
+                  <td><input value="0" /></td><td><input value="10" /></td><td><input disabled placeholder="—" /></td><td><select disabled><option>否</option></select></td>
+                  <td><input value="14.49" /></td><td><select><option selected>EUR</option></select></td><td><input value="1" /></td></tr>
+                <tr><td><span class="row-del">⊖</span></td><td><select><option selected>ZONE D</option></select></td><td><input disabled /></td>
+                  <td><select><option selected>总价</option></select></td>
+                  <td><input value="10" /></td><td><input value="20" /></td><td><input disabled /></td><td><select disabled><option>否</option></select></td>
+                  <td><input value="15.17" /></td><td><select><option selected>EUR</option></select></td><td><input value="1" /></td></tr>
+                <tr><td><span class="row-del">⊖</span></td><td><select><option selected>ZONE D</option></select></td><td><input disabled /></td>
+                  <td><select><option selected>总价</option></select></td>
+                  <td><input value="20" /></td><td><input value="30" /></td><td><input disabled /></td><td><select disabled><option>否</option></select></td>
+                  <td><input value="15.86" class="tier-last" data-g="zone-d" /></td><td><select><option selected>EUR</option></select></td><td><input value="1" /></td></tr>
+                <tr class="row-ov" data-g="zone-d">
+                  <td><span class="row-del">⊖</span></td><td><select><option selected>ZONE D</option></select></td><td><input disabled /></td>
+                  <td><select class="charge-type type-ov"><option>总价</option><option>单价</option><option>首重价</option><option>续重单价</option><option selected>超重续重</option></select></td>
+                  <td><input value="30" class="ov-start" /></td><td><input value="999" /></td><td><input value="1" class="ov-unit" /></td>
+                  <td><select class="ov-ceil"><option selected>否</option><option>是</option></select></td>
+                  <td><input value="0.84" class="ov-price" /></td><td><select><option selected>EUR</option></select></td><td><input value="1" /></td></tr>
+
+                <!-- ZONE C：同结构 -->
+                <tr><td><span class="row-del">⊖</span></td><td><select><option selected>ZONE C</option></select></td><td><input disabled /></td>
+                  <td><select><option selected>总价</option></select></td>
+                  <td><input value="0" /></td><td><input value="10" /></td><td><input disabled /></td><td><select disabled><option>否</option></select></td>
+                  <td><input value="11.02" /></td><td><select><option selected>EUR</option></select></td><td><input value="1" /></td></tr>
+                <tr><td><span class="row-del">⊖</span></td><td><select><option selected>ZONE C</option></select></td><td><input disabled /></td>
+                  <td><select><option selected>总价</option></select></td>
+                  <td><input value="10" /></td><td><input value="20" /></td><td><input disabled /></td><td><select disabled><option>否</option></select></td>
+                  <td><input value="11.70" /></td><td><select><option selected>EUR</option></select></td><td><input value="1" /></td></tr>
+                <tr><td><span class="row-del">⊖</span></td><td><select><option selected>ZONE C</option></select></td><td><input disabled /></td>
+                  <td><select><option selected>总价</option></select></td>
+                  <td><input value="20" /></td><td><input value="30" /></td><td><input disabled /></td><td><select disabled><option>否</option></select></td>
+                  <td><input value="14.49" class="tier-last" data-g="zone-c" /></td><td><select><option selected>EUR</option></select></td><td><input value="1" /></td></tr>
+                <tr class="row-ov" data-g="zone-c">
+                  <td><span class="row-del">⊖</span></td><td><select><option selected>ZONE C</option></select></td><td><input disabled /></td>
+                  <td><select class="charge-type type-ov"><option selected>超重续重</option></select></td>
+                  <td><input value="30" /></td><td><input value="999" /></td><td><input value="1" /></td>
+                  <td><select><option selected>否</option></select></td>
+                  <td><input value="0.84" class="ov-price" /></td><td><select><option selected>EUR</option></select></td><td><input value="1" /></td></tr>
+
+                <!-- IT 意大利：现有首重+续重（不用超重续重） -->
+                <tr><td><span class="row-del">⊖</span></td><td><select><option selected>IT</option></select></td><td><input value="意大利" readonly style="background:#f6ffed" /></td>
+                  <td><select><option>总价</option><option>单价</option><option selected>首重价</option><option>续重单价</option><option>超重续重</option></select></td>
+                  <td><input value="0" /></td><td><input value="0.01" /></td><td><input disabled /></td><td><select disabled><option>否</option></select></td>
+                  <td><input value="8.05" /></td><td><select><option selected>EUR</option></select></td><td><input value="1" /></td></tr>
+                <tr><td><span class="row-del">⊖</span></td><td><select><option selected>IT</option></select></td><td><input value="意大利" readonly style="background:#f6ffed" /></td>
+                  <td><select><option>总价</option><option>单价</option><option>首重价</option><option selected>续重单价</option><option>超重续重</option></select></td>
+                  <td><input value="0.01" /></td><td><input value="30" /></td><td><input value="0.1" /></td>
+                  <td><select><option>否</option><option selected>是</option></select></td>
+                  <td><input value="0.26" /></td><td><select><option selected>EUR</option></select></td><td><input value="1" /></td></tr>
+              </tbody>
+            </table>
+          </div>
+        <button class="btn-link">+ 新增一行</button>
+      </div>
+      <div class="dialog-f">
+        <button class="btn">取消</button>
+        <button class="btn btn-primary">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.querySelectorAll('.charge-type').forEach(function(sel) {
+      sel.addEventListener('change', function() {
+        var tr = sel.closest('tr');
+        var isOv = sel.options[sel.selectedIndex].text === '超重续重';
+        tr.classList.toggle('row-ov', isOv);
+        sel.classList.toggle('type-ov', isOv);
+      });
+    });
+  </script>
+</body>
+</html>
